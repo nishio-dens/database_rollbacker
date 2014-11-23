@@ -23,8 +23,10 @@ class DatabaseRollbacker::Rollbacker
 
   def detect_rollbacker
     if defined? ::ActiveRecord
+      require 'database_rollbacker/active_record/rollbacker.rb'
       DatabaseRollbacker::ActiveRecord::Rollbacker.new
     elsif defined? ::DataMapper
+      require 'database_rollbacker/data_mapper/rollbacker.rb'
       DatabaseRollbacker::DataMapper::Rollbacker.new
     end
   end
