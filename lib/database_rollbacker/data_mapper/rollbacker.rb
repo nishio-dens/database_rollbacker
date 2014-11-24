@@ -15,7 +15,7 @@ class DatabaseRollbacker::DataMapper::Rollbacker
       transaction_id = transaction
         .instance_variable_get("@transaction_primitives")
         .values
-        .find { |v| v.is_a? DataObjects::SavePoint }
+        .last
         .id
       @savepoints.push DatabaseRollbacker::Savepoint.new(
         savepoint_name,
@@ -33,7 +33,7 @@ class DatabaseRollbacker::DataMapper::Rollbacker
           .current_transaction
           .instance_variable_get("@transaction_primitives")
           .values
-          .find { |v| v.is_a? DataObjects::SavePoint }
+          .last
           .id
         adapter.current_transaction.rollback
         adapter.pop_transaction
