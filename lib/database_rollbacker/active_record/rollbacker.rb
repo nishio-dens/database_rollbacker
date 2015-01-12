@@ -9,7 +9,7 @@ class DatabaseRollbacker::ActiveRecord::Rollbacker
 
   def save(savepoint_name)
     raise ArgumentError.new('duplicate savepoint name') if savepoint_exist?(savepoint_name)
-    transaction_number = ActiveRecord::Base.connection.current_transaction.number
+    transaction_number = ActiveRecord::Base.connection.open_transactions
     ActiveRecord::Base.connection.begin_transaction(joinable: false)
     @savepoints.push DatabaseRollbacker::Savepoint.new(
       savepoint_name,
@@ -19,8 +19,8 @@ class DatabaseRollbacker::ActiveRecord::Rollbacker
   def rollback(savepoint_name)
     savepoint = fetch_savepoint(savepoint_name)
     raise ArgumentError.new("savepoint not found") unless savepoint.present?
-    while ActiveRecord::Base.connection.current_transaction.number > 0 do
-      break if ActiveRecord::Base.connection.current_transaction.number == savepoint.savepoint_id
+    while ActiveRecord::Base.connection.open_transactions > 0 do
+      break if ActiveRecord::Base.connection.open_transactions == savepoint.savepoint_id
       ActiveRecord::Base.connection.rollback_transaction
     end
     while @savepoints.present? do
@@ -34,7 +34,7 @@ class DatabaseRollbacker::ActiveRecord::Rollbacker
   end
 
   def clean
-    while ActiveRecord::Base.connection.current_transaction.number > 0 do
+    while ActiveRecord::Base.connection.open_transactions > 0 do
       ActiveRecord::Base.connection.rollback_transaction
     end
     @savepoints = []
